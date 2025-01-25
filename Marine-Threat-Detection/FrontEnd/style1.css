@@ -72,3 +72,36 @@ button:hover{
     background:  black;
     transition: 0.8s;
 }
+button:hover{
+    color: gray;
+}
+.banner video{
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+}
+.logo-animation{
+    
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0;
+        transition: transform 0.5s ease, opacity 0.5s ease;
+    }
+
+    .logo-animation img {
+        width: 100px; /* Adjust the size of your logo */
+        height: auto;
+    }
+
+@media(min-aspect-ratio: 16/9){
+    .banner video{
+        width: 100%;
+        height: auto;
+    }
+    
+    
+}
