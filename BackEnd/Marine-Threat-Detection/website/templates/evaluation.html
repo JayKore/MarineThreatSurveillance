@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Model Evaluation — MTS{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/evaluation.css') }}" />{% endblock %}
+
+{% block content %}
+<section class="eval-page container">
+  <header style="margin-bottom: 1rem;">
+    <span class="eyebrow">Model Evaluation</span>
+    <h1 style="margin-top:0.6rem;">How the model performs</h1>
+    <p class="muted" style="max-width: 720px; margin-top: 1rem;">Realistic placeholder metrics for the current marine-threat classifier. Replace with values from your evaluation notebook to make this page authoritative.</p>
+  </header>
+
+  <div class="eval-summary">
+    <div class="eval-summary__card">
+      <div class="metric-large" data-counter="84.7" data-suffix="%">0</div>
+      <span class="metric-large__label">mAP @ 0.5</span>
+    </div>
+    <div class="eval-summary__card amber">
+      <div class="metric-large" data-counter="92.1" data-suffix="%">0</div>
+      <span class="metric-large__label">Precision</span>
+    </div>
+    <div class="eval-summary__card">
+      <div class="metric-large" data-counter="88.5" data-suffix="%">0</div>
+      <span class="metric-large__label">Recall</span>
+    </div>
+    <div class="eval-summary__card amber">
+      <div class="metric-large" data-counter="90.2" data-suffix="%">0</div>
+      <span class="metric-large__label">F1 Score</span>
+    </div>
+  </div>
+
+  <div class="eval-grid">
+
+    <div class="chart-card reveal">
+      <div class="chart-card__head">
+        <div class="chart-card__title">Loss Curves</div>
+        <div class="chart-card__metric">Final val: 0.184</div>
+      </div>
+      <div class="chart-card__desc">Train and validation loss across 25 epochs. Convergence stable, modest overfitting margin.</div>
+      <canvas id="chart-loss"></canvas>
+    </div>
+
+    <div class="chart-card reveal delay-1">
+      <div class="chart-card__head">
+        <div class="chart-card__title">Accuracy Curves</div>
+        <div class="chart-card__metric">Best val: 92.4%</div>
+      </div>
+      <div class="chart-card__desc">Training vs validation accuracy. Plateau after epoch 18.</div>
+      <canvas id="chart-acc"></canvas>
+    </div>
+
+    <div class="chart-card reveal delay-2">
+      <div class="chart-card__head">
+        <div class="chart-card__title">Precision–Recall</div>
+        <div class="chart-card__metric">AUC: 0.91</div>
+      </div>
+      <div class="chart-card__desc">PR curves per class — useful when evaluating against imbalanced data.</div>
+      <canvas id="chart-pr"></canvas>
+    </div>
+
+    <div class="chart-card reveal delay-3">
+      <div class="chart-card__head">
+        <div class="chart-card__title">Confusion Matrix</div>
+        <div class="chart-card__metric">N=420 test images</div>
+      </div>
+      <div class="chart-card__desc">Predicted vs true labels on the held-out test set.</div>
+      <div class="confusion" id="confusion"></div>
+    </div>
+
+    <div class="chart-card reveal">
+      <div class="chart-card__head">
+        <div class="chart-card__title">mAP by Class</div>
+        <div class="chart-card__metric">12 classes</div>
+      </div>
+      <div class="chart-card__desc">Per-class mean average precision — flags classes that need more data.</div>
+      <canvas id="chart-map"></canvas>
+    </div>
+
+    <div class="chart-card reveal delay-1">
+      <div class="chart-card__head">
+        <div class="chart-card__title">F1 vs Threshold</div>
+        <div class="chart-card__metric">Best @ 0.55</div>
+      </div>
+      <div class="chart-card__desc">F1 score across confidence thresholds — where to set the production cutoff.</div>
+      <canvas id="chart-f1"></canvas>
+    </div>
+
+    <div class="chart-card reveal delay-2">
+      <div class="chart-card__head">
+        <div class="chart-card__title">ROC Curve</div>
+        <div class="chart-card__metric">AUC: 0.94</div>
+      </div>
+      <div class="chart-card__desc">True positive rate vs false positive rate.</div>
+      <canvas id="chart-roc"></canvas>
+    </div>
+
+    <div class="chart-card reveal delay-3">
+      <div class="chart-card__head">
+        <div class="chart-card__title">Inference Latency</div>
+        <div class="chart-card__metric">p50: 142 ms</div>
+      </div>
+      <div class="chart-card__desc">Distribution of inference latencies measured on the eval set.</div>
+      <canvas id="chart-latency"></canvas>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

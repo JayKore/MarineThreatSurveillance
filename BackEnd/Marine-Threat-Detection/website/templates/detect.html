@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Detection Console — MTS{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/detect.css') }}" />{% endblock %}
+
+{% block content %}
+<section class="detect-page container">
+  <header class="detect-header">
+    <div>
+      <span class="eyebrow">Detection Console</span>
+      <h1>Run Inference</h1>
+    </div>
+    <div class="tag" id="health-tag">Model: checking…</div>
+  </header>
+
+  <div class="detect-layout">
+
+    <!-- LEFT: Upload + controls -->
+    <aside class="panel">
+      <label class="upload" id="upload-zone">
+        <input type="file" id="file-input" accept="image/*" hidden />
+        <svg class="upload__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3v14"/><path d="M5 10l7-7 7 7"/><path d="M3 21h18"/></svg>
+        <div class="upload__title">DROP IMAGE HERE</div>
+        <div class="upload__hint">or click to upload — JPG / PNG / BMP</div>
+      </label>
+
+      <div class="controls">
+        <div class="slider">
+          <div class="threshold-row">
+            <label class="field-label">Confidence Threshold</label>
+            <span class="threshold-value" id="threshold-value">0.50</span>
+          </div>
+          <input type="range" id="threshold" min="0" max="1" step="0.01" value="0.5" />
+        </div>
+
+        <button class="btn btn--primary run-btn" id="run-btn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 3"/></svg>
+          <span>Run Detection</span>
+        </button>
+
+        <div class="inference-time" id="inference-time" hidden>
+          Inference: <strong id="inference-ms">—</strong>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT: Results -->
+    <section class="results">
+      <div class="canvas-wrap" id="canvas-wrap">
+        <div class="canvas-wrap__placeholder" id="canvas-placeholder">
+          Awaiting image upload
+        </div>
+      </div>
+
+      <div class="error-card" id="error-card"></div>
+
+      <div class="analysis-card" id="analysis-card" hidden></div>
+
+      <div class="detections" id="detections"></div>
+
+      <div class="results-actions" id="results-actions" hidden>
+        <button class="btn btn--cyan" id="save-btn">Save to Dashboard</button>
+        <button class="btn btn--ghost" id="report-btn">Download PDF Report</button>
+      </div>
+    </section>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/detection.js') }}"></script>
+{% endblock %}

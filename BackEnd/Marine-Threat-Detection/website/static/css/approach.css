@@ -1,0 +1,63 @@
+/* ============================================================
+   APPROACH PAGE
+   ============================================================ */
+
+.approach-hero {
+  position: relative;
+  padding-top: calc(var(--nav-h) + 4rem);
+  padding-bottom: 4rem;
+  text-align: center;
+  overflow: hidden;
+}
+.approach-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,212,255,0.18), transparent 70%);
+  z-index: 0;
+}
+.approach-hero > * { position: relative; z-index: 1; }
+.approach-hero h1 { font-size: clamp(2.6rem, 7vw, 5rem); }
+.approach-hero p { color: var(--color-text-dim); max-width: 640px; margin: 1.5rem auto 0; font-size: 14px; line-height: 1.8; }
+
+.approach-section { padding-block: 3.5rem; }
+.approach-section h2 { margin-bottom: 1rem; }
+.approach-section p { color: var(--color-text); line-height: 1.85; max-width: 760px; margin-top: 1rem; font-size: 14px; }
+
+.approach-section .eyebrow { display: block; margin-bottom: 0.6rem; }
+
+/* Pipeline visual */
+.pipeline-visual {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+}
+.pipeline-step {
+  flex: 1 1 140px;
+  min-width: 140px;
+  padding: 1rem;
+  border: 1px solid var(--border-cyan);
+  background: rgba(0, 212, 255, 0.06);
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.pipeline-step strong { color: var(--color-cyan); font-family: var(--font-display); display: block; margin-bottom: 0.4rem; font-size: 12px; }
+.pipeline-arrow { color: var(--color-cyan); font-size: 20px; }
+
+.kv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.kv-item {
+  border-left: 2px solid var(--color-cyan);
+  padding: 0.8rem 1rem;
+  background: rgba(0,212,255,0.04);
+}
+.kv-item .key { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--color-text-dim); }
+.kv-item .val { font-family: var(--font-display); color: var(--color-cyan); margin-top: 0.4rem; font-size: 16px; }

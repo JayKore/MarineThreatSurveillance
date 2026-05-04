@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Our Approach — MTS{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/approach.css') }}" />{% endblock %}
+
+{% block content %}
+
+<section class="approach-hero">
+  <div class="container">
+    <span class="eyebrow">01 — How we built it</span>
+    <h1 style="margin-top:1rem;">OUR APPROACH</h1>
+    <p>Two inference paths, one tactical UI. A custom-trained PyTorch classifier for single-image threat verdicts with a per-class confidence breakdown, plus a real-time YOLOv8 surveillance loop that watches a live camera feed and auto-snapshots threats. This page explains every layer.</p>
+  </div>
+</section>
+
+<div class="container">
+
+  <!-- Two systems overview -->
+  <section class="approach-section reveal">
+    <span class="eyebrow">System Overview</span>
+    <h2>Two engines, one frontend</h2>
+    <p>The site exposes two complementary detection modes. The Detection Console (<code>/detect</code>) accepts a still image and returns a calibrated threat / not-threat verdict with per-class probabilities, an explainable analysis card, and a downloadable PDF report. The Live Surveillance page (<code>/live</code>) opens a webcam, runs YOLOv8 on every other frame, and saves an annotated snapshot to disk whenever a monitored class crosses the confidence threshold.</p>
+
+    <div class="kv-grid">
+      <div class="kv-item"><div class="key">Single-Image Path</div><div class="val">PyTorch classifier</div></div>
+      <div class="kv-item"><div class="key">Live Path</div><div class="val">YOLOv8n (COCO)</div></div>
+      <div class="kv-item"><div class="key">Server</div><div class="val">Flask + Jinja2</div></div>
+      <div class="kv-item"><div class="key">Frontend</div><div class="val">Vanilla JS + CSS</div></div>
+      <div class="kv-item"><div class="key">Charts</div><div class="val">Chart.js</div></div>
+      <div class="kv-item"><div class="key">PDF Reports</div><div class="val">jsPDF (lazy CDN)</div></div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Problem -->
+  <section class="approach-section reveal">
+    <span class="eyebrow">Problem</span>
+    <h2>Why marine detection is hard</h2>
+    <p>Marine scenes are notoriously difficult for vision models. Sun glare, sea spray, occlusion by waves, and extreme variations in object scale all make naive classifiers brittle. Add the long tail of rare-but-critical classes (drifting debris, partly-submerged species) and you have a problem that demands careful preprocessing, a robust backbone, and aggressive evaluation.</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Architecture -->
+  <section class="approach-section reveal">
+    <span class="eyebrow">02 — Classifier Architecture</span>
+    <h2>The model</h2>
+    <p>The custom model is a CNN classifier (ResNet-style) fine-tuned on a curated marine dataset and saved as a full <code>nn.Module</code> via <code>torch.save</code>. It produces a binary verdict — <code>threat</code> vs <code>not threat</code>. Inference runs on CPU by default and on CUDA when available. Inputs are 224×224 RGB, normalized with the dataset's own mean and standard deviation.</p>
+
+    <div class="kv-grid">
+      <div class="kv-item"><div class="key">Weights File</div><div class="val">best_model.pth</div></div>
+      <div class="kv-item"><div class="key">Size on Disk</div><div class="val">44.8 MB</div></div>
+      <div class="kv-item"><div class="key">Input Size</div><div class="val">224 × 224</div></div>
+      <div class="kv-item"><div class="key">Channels</div><div class="val">RGB</div></div>
+      <div class="kv-item"><div class="key">Mean</div><div class="val">0.284, 0.380, 0.452</div></div>
+      <div class="kv-item"><div class="key">Std</div><div class="val">0.223, 0.194, 0.188</div></div>
+      <div class="kv-item"><div class="key">Classes</div><div class="val">threat / not threat</div></div>
+      <div class="kv-item"><div class="key">Format</div><div class="val">.pth (full module)</div></div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Preprocessing -->
+  <section class="approach-section reveal">
+    <span class="eyebrow">03 — Preprocessing</span>
+    <h2>From image to tensor</h2>
+    <p>The same pipeline used at training time is reproduced exactly at inference time — any drift here silently destroys accuracy. Preprocessing lives in <code>utils.py</code> and is shared between the notebook and the Flask handler.</p>
+
+    <div class="pipeline-visual">
+      <div class="pipeline-step"><strong>01</strong>Load RGB</div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step"><strong>02</strong>Resize 224×224</div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step"><strong>03</strong>ToTensor</div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step"><strong>04</strong>Normalize</div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step"><strong>05</strong>Unsqueeze + .to(device)</div>
+    </div>
+
+    <div class="code-block">image = Image.open(path).convert('RGB')
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize([0.2842, 0.3798, 0.4523],
+                         [0.2231, 0.1942, 0.1880]),
+])
+tensor = transform(image).unsqueeze(0).to(device)</div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Post-processing -->
+  <section class="approach-section reveal">
+    <span class="eyebrow">04 — Post-processing &amp; Reasoning</span>
+    <h2>From logits to a human-readable verdict</h2>
+    <p>Raw logits go through <code>softmax</code> to get class probabilities. The Detection Console's threshold slider filters predictions below the chosen confidence. The frontend then derives a tier (very high / high / moderate / low) and writes a one-paragraph plain-language explanation of the verdict, all rendered into the analysis card and the downloadable PDF report.</p>
+
+    <div class="code-block">probs = torch.nn.functional.softmax(logits, dim=1)[0]
+all_scores = {CLASSES[i]: float(probs[i]) for i in range(len(CLASSES))}
+verdict = top_label              # "threat" | "not threat"
+tier = "very high" if conf >= 0.9 else "high" if conf >= 0.75 else "moderate" if conf >= 0.6 else "low"</div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Training -->
+  <section class="approach-section reveal">
+    <span class="eyebrow">05 — Training</span>
+    <h2>How the model learned</h2>
+    <p>Training is documented in <code>model/Training_Methodology.ipynb</code>. The dataset (downloaded from the team's Google Drive) holds <strong>875 real marine images</strong> across two classes, split into training and validation folders. We use cross-entropy loss, an Adam optimizer with step-decay learning rate, and standard photo augmentations to fight overfitting.</p>
+
+    <div class="kv-grid">
+      <div class="kv-item"><div class="key">Total Images</div><div class="val">875</div></div>
+      <div class="kv-item"><div class="key">Train / Val</div><div class="val">816 / 70</div></div>
+      <div class="kv-item"><div class="key">Class Split (train)</div><div class="val">309 threat · 507 not</div></div>
+      <div class="kv-item"><div class="key">Loss</div><div class="val">CrossEntropy</div></div>
+      <div class="kv-item"><div class="key">Optimizer</div><div class="val">Adam</div></div>
+      <div class="kv-item"><div class="key">LR Schedule</div><div class="val">StepLR (γ=0.1)</div></div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Live Surveillance -->
+  <section class="approach-section reveal">
+    <span class="eyebrow">06 — Live Surveillance (YOLOv8)</span>
+    <h2>Real-time detection on a webcam</h2>
+    <p>The Live page runs <code>yolov8n.pt</code> (Ultralytics, COCO-pretrained, ~6&nbsp;MB) on every other frame from a webcam capture. Boats are flagged as threats; persons, bicycles, birds, and a few other monitored COCO classes are drawn but not alarmed. Detections are annotated directly on the frame, encoded as JPEG, and pushed over an MJPEG stream. A background thread owns the loop; the page polls <code>/live/status</code> once a second for telemetry (FPS, recent detections, snapshots).</p>
+
+    <div class="kv-grid">
+      <div class="kv-item"><div class="key">Detector</div><div class="val">YOLOv8n</div></div>
+      <div class="kv-item"><div class="key">Input</div><div class="val">640 × 480 webcam</div></div>
+      <div class="kv-item"><div class="key">Conf. Threshold</div><div class="val">0.45</div></div>
+      <div class="kv-item"><div class="key">Threat Classes</div><div class="val">boat (COCO 8)</div></div>
+      <div class="kv-item"><div class="key">Stream</div><div class="val">multipart MJPEG</div></div>
+      <div class="kv-item"><div class="key">Snapshot Cooldown</div><div class="val">8 s / class</div></div>
+    </div>
+
+    <div class="pipeline-visual" style="margin-top: 1.5rem;">
+      <div class="pipeline-step"><strong>01</strong>Webcam frame</div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step"><strong>02</strong>YOLOv8 inference</div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step"><strong>03</strong>Annotate + JPEG encode</div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step"><strong>04</strong>MJPEG out · auto-snapshot</div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Deployment -->
+  <section class="approach-section reveal">
+    <span class="eyebrow">07 — Deployment</span>
+    <h2>Flask serves both engines</h2>
+    <p>The classifier weights are loaded once at startup (<code>weights_only=False</code> for the full-module pickle). The YOLO model lazy-loads on first start of the live stream and is cached for the session. Every page is server-rendered Jinja2; pages are progressively enhanced with vanilla JavaScript. No build step, no bundler.</p>
+
+    <div class="code-block"># Single-image classifier
+@app.post("/predict")
+def predict():
+    file = request.files["image"]
+    threshold = float(request.form.get("threshold", 0.5))
+    detections, ms, size, all_scores = threat_model.predict(file, threshold)
+    return jsonify(detections=detections, all_scores=all_scores,
+                   inference_time_ms=ms, image_size=size)
+
+# Live YOLOv8 stream
+@app.get("/live/stream.mjpg")
+def live_stream():
+    return Response(live_detector.iter_jpeg_frames(),
+                    mimetype="multipart/x-mixed-replace; boundary=frame")</div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Stack -->
+  <section class="approach-section reveal">
+    <span class="eyebrow">08 — Stack</span>
+    <h2>Everything we use</h2>
+    <p>Deliberately small. No SPA framework, no bundler, no build step — just the libraries that earn their place.</p>
+
+    <div class="kv-grid">
+      <div class="kv-item"><div class="key">Backend</div><div class="val">Flask · Werkzeug</div></div>
+      <div class="kv-item"><div class="key">ML</div><div class="val">PyTorch · torchvision</div></div>
+      <div class="kv-item"><div class="key">Live Detection</div><div class="val">Ultralytics · OpenCV</div></div>
+      <div class="kv-item"><div class="key">Templating</div><div class="val">Jinja2</div></div>
+      <div class="kv-item"><div class="key">Frontend</div><div class="val">Vanilla JS · CSS Vars</div></div>
+      <div class="kv-item"><div class="key">Typography</div><div class="val">Orbitron · IBM Plex Mono</div></div>
+      <div class="kv-item"><div class="key">Charts</div><div class="val">Chart.js (CDN)</div></div>
+      <div class="kv-item"><div class="key">PDF</div><div class="val">jsPDF (CDN, lazy)</div></div>
+      <div class="kv-item"><div class="key">Auth</div><div class="val">Flask sessions · users.json</div></div>
+      <div class="kv-item"><div class="key">History</div><div class="val">localStorage</div></div>
+    </div>
+  </section>
+
+</div>
+
+{% endblock %}

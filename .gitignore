@@ -1,0 +1,61 @@
+# ─── Heavy ML assets — fetch from team Drive (links in README) ────
+# Dataset (~314 MB) and model weights (~88 MB) are NOT committed.
+**/Dataset/
+**/best_model.pth
+
+# Auto-generated runtime data ─────────────────────────────────────
+**/website/static/snapshots/
+**/website/static/uploads/
+**/website/static/upload_*
+**/users.json
+**/logs/
+**/*.log
+
+# YOLO weights cache (downloaded on first /live start)
+yolov8n.pt
+**/yolov8n.pt
+
+# Python ──────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Node (just in case anyone scaffolds a frontend)
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+
+# Editor / OS ─────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Secrets ─────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+secrets.json
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Misc
+*.tmp
+*.bak

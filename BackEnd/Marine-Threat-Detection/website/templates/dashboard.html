@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — MTS{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />{% endblock %}
+
+{% block content %}
+<section class="dashboard-page container">
+  <header class="dashboard-head">
+    <div>
+      <span class="eyebrow">Mission History</span>
+      <h1>Detection Archive</h1>
+    </div>
+    <div class="flex" style="gap:0.6rem;">
+      <a class="btn btn--cyan" href="{{ url_for('detect') }}">+ New Scan</a>
+      <button class="btn btn--ghost" id="clear-history-btn">Clear History</button>
+    </div>
+  </header>
+
+  <div class="filters">
+    <div>
+      <label>From</label>
+      <input type="date" id="filter-from" />
+    </div>
+    <div>
+      <label>To</label>
+      <input type="date" id="filter-to" />
+    </div>
+    <div>
+      <label>Threat Level</label>
+      <select id="filter-level">
+        <option value="">All</option>
+        <option value="threat">Threat</option>
+        <option value="warning">Warning</option>
+        <option value="safe">Safe</option>
+      </select>
+    </div>
+    <div>
+      <label>Class</label>
+      <select id="filter-class">
+        <option value="">All</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="dashboard-skeletons" class="history-grid">
+    <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+  </div>
+
+  <div id="history-grid" class="history-grid" hidden></div>
+
+  <div id="empty-state" class="empty" hidden>
+    <div class="sonar sonar__crosshair">
+      <div class="sonar__ring"></div><div class="sonar__ring sonar__ring--mid"></div>
+      <div class="sonar__sweep"></div><div class="sonar__pulse"></div><div class="sonar__pulse"></div><div class="sonar__ping"></div>
+    </div>
+    <p>No detections yet.</p>
+    <a class="btn btn--primary" href="{{ url_for('detect') }}">Start Your First Scan →</a>
+  </div>
+</section>
+
+<!-- Record modal -->
+<div class="modal record-modal" id="record-modal" role="dialog" aria-hidden="true">
+  <div class="modal__panel record-modal__panel">
+    <button class="modal__close" data-close-modal>×</button>
+    <h3 class="modal__title" id="record-title">Detection</h3>
+    <div class="record-modal__layout">
+      <div class="record-modal__image" id="record-image"></div>
+      <div>
+        <div class="analysis-card" id="record-analysis"></div>
+        <div class="record-modal__meta" id="record-meta" style="margin-top: 1rem;"></div>
+        <div class="record-modal__actions" style="margin-top: 1rem; display: flex; gap: 0.6rem;">
+          <button class="btn btn--ghost btn--sm" id="record-pdf-btn">Download PDF Report</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm clear modal -->
+<div class="modal" id="confirm-clear" role="dialog" aria-hidden="true">
+  <div class="modal__panel">
+    <button class="modal__close" data-close-modal>×</button>
+    <h3 class="modal__title">Clear History?</h3>
+    <p class="muted">All saved detections in this browser will be permanently removed.</p>
+    <div class="confirm-bar">
+      <button class="btn btn--ghost" data-close-modal>Cancel</button>
+      <button class="btn btn--primary" id="confirm-clear-btn">Clear</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

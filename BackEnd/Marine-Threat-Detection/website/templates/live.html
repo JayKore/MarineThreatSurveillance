@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Live Surveillance — MTS{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/live.css') }}" />
+{% endblock %}
+
+{% block content %}
+<section class="live-page container">
+  <header class="live-page__header">
+    <div>
+      <span class="eyebrow">Live Surveillance — YOLOv8</span>
+      <h1>Real-Time <em>Watch</em></h1>
+    </div>
+    <div class="tag {{ 'tag--safe' if live_available else 'tag--threat' }}" id="live-tag">
+      {{ 'Backend: ready' if live_available else 'Backend: unavailable' }}
+    </div>
+  </header>
+
+  <p class="live-page__sub">
+    Real-time object detection on a webcam feed using YOLOv8.
+    Boats and other monitored classes are highlighted; threats trigger an automatic snapshot saved to the gallery below.
+  </p>
+
+  {% if not live_available %}
+    <div class="live-banner">
+      <span class="live-banner__icon">!</span>
+      <div>
+        <strong>Live detection unavailable.</strong>
+        <span>{{ live_unavailable_reason }}</span>
+        <small>Install: <code>pip install torch torchvision ultralytics opencv-python</code></small>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="live-grid">
+    <!-- ─── Stream panel ─── -->
+    <section class="panel live-stream">
+      <div class="live-stream__head">
+        <span class="eyebrow">Camera Feed</span>
+        <span class="live-pill" data-status-pill>STANDBY</span>
+      </div>
+
+      <div class="live-stream__viewport">
+        <img id="liveStream" alt="Live YOLOv8 stream" data-src="{{ url_for('live_stream') }}" />
+        <div class="live-stream__crosshair"></div>
+        <div class="live-stream__hud">
+          <span data-hud-fps>FPS —</span>
+          <span data-hud-det>DET —</span>
+          <span data-hud-cam>CAM 0</span>
+        </div>
+        <div class="live-stream__placeholder" id="liveStreamPlaceholder">
+          <div class="sonar sonar--small">
+            <div class="sonar__ring"></div>
+            <div class="sonar__ring sonar__ring--mid"></div>
+            <div class="sonar__sweep"></div>
+            <div class="sonar__pulse"></div>
+            <div class="sonar__ping"></div>
+          </div>
+          <div class="live-stream__placeholder-text">Stream offline — press Start</div>
+        </div>
+      </div>
+
+      <div class="live-stream__controls">
+        <label class="live-camera-select">
+          <span>Camera</span>
+          <select id="liveCamera">
+            <option value="0" selected>Camera 0 (default)</option>
+            <option value="1">Camera 1</option>
+            <option value="2">Camera 2</option>
+          </select>
+        </label>
+        <button id="liveStartBtn" class="btn btn--primary" {% if not live_available %}disabled{% endif %}>
+          ▶ Start Stream
+        </button>
+        <button id="liveStopBtn" class="btn btn--ghost" disabled>
+          ■ Stop
+        </button>
+        <a href="#snapshots" class="btn btn--ghost btn--sm">View Snapshots ↓</a>
+      </div>
+    </section>
+
+    <!-- ─── Telemetry sidebar ─── -->
+    <aside class="panel live-side">
+      <div class="live-side__head">
+        <span class="eyebrow">Telemetry</span>
+        <span class="live-pill live-pill--cyan" data-active-threats>0 ACTIVE</span>
+      </div>
+
+      <ul class="live-stat-list">
+        <li><span>Status</span><strong data-stat-status>—</strong></li>
+        <li><span>FPS</span><strong data-stat-fps>—</strong></li>
+        <li><span>Frames</span><strong data-stat-frames>—</strong></li>
+        <li><span>Model</span><strong data-stat-model>yolov8n</strong></li>
+        <li><span>Conf</span><strong data-stat-conf>—</strong></li>
+        <li><span>Camera</span><strong data-stat-cam>—</strong></li>
+      </ul>
+
+      <div class="live-side__section">
+        <span class="eyebrow">Recent Detections</span>
+      </div>
+      <ul class="live-detection-list" data-detection-list>
+        <li class="live-detection-list__empty">No detections yet.</li>
+      </ul>
+
+      <div class="live-side__section">
+        <span class="eyebrow">Last Error</span>
+      </div>
+      <div class="live-error" data-last-error>—</div>
+    </aside>
+  </div>
+
+  <!-- ─── Snapshots gallery ─── -->
+  <section id="snapshots" class="live-snapshots">
+    <header class="live-snapshots__head">
+      <div>
+        <span class="eyebrow">Threat Snapshots</span>
+        <h2>Auto-Captured Threats</h2>
+      </div>
+      <span class="muted" data-snap-count>0 captured</span>
+    </header>
+    <div class="live-snapshots__grid" data-snapshot-grid>
+      <div class="live-snapshots__empty">
+        Threat detections trigger an auto-snapshot. They will appear here.
+      </div>
+    </div>
+  </section>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/live.js') }}"></script>
+{% endblock %}
